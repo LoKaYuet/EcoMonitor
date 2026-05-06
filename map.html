@@ -1,14 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eco‑Monitor — Home</title>
-    <link rel="stylesheet" href="css/index.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPS Location Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-sans), sans-serif; background: transparent; }
+    
+    .container { display: flex; flex-direction: column; height: 100%; }
+    .header { padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); }
+    .header h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+    .header p { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+    
+    .controls { padding: 1rem 1.25rem; display: flex; gap: 12px; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+    .controls button { padding: 8px 16px; font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: transparent; border-radius: var(--border-radius-md); transition: all 0.2s; }
+    .controls button:hover { background: var(--color-background-secondary); }
+    .controls button.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+    
+    #map { flex: 1; width: 100%; min-height: 400px; }
+    
+    .info-panel { padding: 1rem 1.25rem; background: var(--color-background-secondary); border-top: 0.5px solid var(--color-border-tertiary); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; font-size: 13px; }
+    .stat { background: var(--color-background-primary); padding: 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
+    .stat-label { color: var(--color-text-secondary); font-size: 12px; margin-bottom: 4px; }
+    .stat-value { font-size: 16px; font-weight: 500; }
+    
+    .status { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 12px; border-radius: var(--border-radius-md); background: var(--color-background-info); color: var(--color-text-info); }
+    .status.error { background: var(--color-background-danger); color: var(--color-text-danger); }
+    .status.recording { background: var(--color-background-success); color: var(--color-text-success); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
 </head>
 <body>
-    <div>map here</div>
-    <div><a href="index.html">back</a></div>
+  <a href="index.html">back</a>
+  <div class="container">
+    <div class="header">
+      <h2>GPS Location Tracker</h2>
+      <p>Track your real-time location and movement history on an interactive map</p>
+    </div>
+    
+    <div class="controls">
+      <button id="startBtn" class="active">Start Tracking</button>
+      <button id="stopBtn">Stop Tracking</button>
+      <button id="clearBtn">Clear Trace</button>
+      <div style="flex: 1;"></div>
+      <div class="status" id="status"><div class="dot"></div> Waiting for permission</div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="info-panel">
+      <div class="stat">
+        <div class="stat-label">Current Latitude</div>
+        <div class="stat-value" id="lat">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Current Longitude</div>
+        <div class="stat-value" id="lng">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Accuracy</div>
+        <div class="stat-value" id="accuracy">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+    let map, marker, polyline, isTracking = false, locationHistory = [];
+    let totalDistance = 0, lastLocation = null;
+
+    // Initialize map
+    function initMap() {
+      map = L.map('map').setView([22.282674, 114.168988], 14); //default posistion 
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+      
+      // Empty layer group for polyline
+      polyline = L.polyline([], { color: '#378ADD', weight: 3, opacity: 0.8 }).addTo(map);
+    }
+
+    function updateStatus(msg, type = 'info') {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + type;
+    }
+
+    function startTracking() {
+      if (!navigator.geolocation) {
+        updateStatus('Geolocation not supported', 'error');
+        return;
+      }
+
+      isTracking = true;
+      locationHistory = [];
+      totalDistance = 0;
+      lastLocation = null;
+      polyline.setLatLngs([]);
+      document.getElementById('startBtn').classList.add('active');
+      document.getElementById('stopBtn').classList.remove('active');
+      
+      updateStatus('📍 Tracking your location...', 'recording');
+
+      const watchId = navigator.geolocation.watchPosition(
+        position => {
+          const { latitude, longitude, accuracy } = position.coords;
+          const coords = [latitude, longitude];
+
+          // Update marker
+          if (!marker) {
+            marker = L.circleMarker(coords, { radius: 8, color: '#185FA5', fill: true, fillColor: '#378ADD', fillOpacity: 0.9, weight: 2 }).addTo(map);
+          } else {
+            marker.setLatLng(coords);
+          }
+
+          // Update trace line
+          locationHistory.push(coords);
+          polyline.setLatLngs(locationHistory);
+          map.setView(coords, map.getZoom());
+
+          // Update stats
+          document.getElementById('lat').textContent = latitude.toFixed(6);
+          document.getElementById('lng').textContent = longitude.toFixed(6);
+          document.getElementById('accuracy').textContent = Math.round(accuracy) + ' m';
+          document.getElementById('distance').textContent = totalDistance.toFixed(2) + ' km';
+        },
+        error => {
+          console.error(error);
+          updateStatus('Location access denied', 'error');
+          isTracking = false;
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      );
+
+      
+      window.currentWatchId = watchId;
+    }
+
+    function stopTracking() {
+      if (window.currentWatchId) {
+        navigator.geolocation.clearWatch(window.currentWatchId);
+      }
+      isTracking = false;
+      document.getElementById('startBtn').classList.remove('active');
+      document.getElementById('stopBtn').classList.add('active');
+      updateStatus('Tracking paused', 'info');
+    }
+
+    function clearTrace() {
+      polyline.setLatLngs([]);
+      locationHistory = [];
+      totalDistance = 0;
+      document.getElementById('distance').textContent = '0 km';
+      updateStatus('Trace cleared', 'info');
+    }
+
+    // Event listeners
+    document.getElementById('startBtn').addEventListener('click', startTracking);
+    document.getElementById('stopBtn').addEventListener('click', stopTracking);
+    document.getElementById('clearBtn').addEventListener('click', clearTrace);
+
+    // Initialize
+    initMap();
+    updateStatus('Ready. Click Start Tracking', 'info');
+  </script>
 </body>
 </html>
