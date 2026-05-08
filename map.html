@@ -97,7 +97,6 @@
           if (distance <= 500) {
             // Show popup notification
             L.popup()
-              .setLatLng(userLatLng)
               .setContent('You are within 500m of location K!')
               .openOn(map);
             
@@ -113,9 +112,6 @@
             (position) => {
               const lat = position.coords.latitude;
               const lng = position.coords.longitude;
-              
-              // Update userLocation circleMarker
-              userLocation.setLatLng([lat, lng]);
               
               // Check distance and show popup if within 500m
               checkUserDistance();
