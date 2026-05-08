@@ -82,6 +82,56 @@
       
       // Empty layer group for polyline
       polyline = L.polyline([], { color: '#378ADD', weight: 3, opacity: 0.8 }).addTo(map);
+
+      // temp test
+        const markerK = L.marker([22.263760, 114.238780]).addTo(map);
+            
+        // Function to check distance and show popup
+        function checkUserDistance() {
+          const userLatLng = userLocation.getLatLng();
+          const markerKLatLng = markerK.getLatLng();
+          
+          // Calculate distance in meters using Leaflet's distanceTo method
+          const distance = userLatLng.distanceTo(markerKLatLng);
+          
+          if (distance <= 500) {
+            // Show popup notification
+            L.popup()
+              .setLatLng(userLatLng)
+              .setContent('You are within 500m of location K!')
+              .openOn(map);
+            
+            return true;
+          } else {
+            return false;
+          }
+        }
+        
+        // Track user position using Geolocation API
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              
+              // Update userLocation circleMarker
+              userLocation.setLatLng([lat, lng]);
+              
+              // Check distance and show popup if within 500m
+              checkUserDistance();
+            },
+            (error) => {
+              console.error('Error getting location:', error);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 10000,
+              timeout: 5000
+            }
+          );
+        } else {
+          console.error('Geolocation is not supported by this browser.');
+        }
     }
 
     function updateStatus(msg, type = 'info') {
