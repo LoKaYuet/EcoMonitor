@@ -69,7 +69,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script>
-    let map, marker, polyline, isTracking = false, locationHistory = [];
+    let map, marker, polyline, isTracking, userLocation = false, locationHistory = [];
     let totalDistance = 0, lastLocation = null;
 
     // Initialize map
@@ -162,10 +162,10 @@
           const coords = [latitude, longitude];
 
           // Update marker
-          if (!marker) {
-            marker = L.circleMarker(coords, { radius: 8, color: '#185FA5', fill: true, fillColor: '#378ADD', fillOpacity: 0.9, weight: 2 }).addTo(map);
+          if (!userLocation) {
+            userLocation = L.circleMarker(coords, { radius: 8, color: '#185FA5', fill: true, fillColor: '#378ADD', fillOpacity: 0.9, weight: 2 }).addTo(map);
           } else {
-            marker.setLatLng(coords);
+            userLocation.setLatLng(coords);
           }
 
           // Update trace line
