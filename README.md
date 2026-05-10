@@ -2,6 +2,8 @@
 
 **Public Alpha** — `ver 0.1.0`
 
+This is the demo version, any data entered will only be stored on the client side.
+
 ---
 ---
 

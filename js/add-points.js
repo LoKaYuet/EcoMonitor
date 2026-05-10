@@ -124,7 +124,9 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         // check areaBonus
-        areaBonus = checkUserInGreyArea();
+        if (typeof checkUserInGreyArea === "function") {
+          areaBonus = checkUserInGreyArea();
+        }
         // add points
         users[current] = users[current] || {};
         if (areaBonus) {
