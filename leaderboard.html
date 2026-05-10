@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eco‑Monitor — Leaderboard</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* Small leaderboard-specific tweaks */
+    .leaderboard-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px; }
+    .leaderboard-actions { display:flex;gap:8px;align-items:center; }
+    .empty { color:var(--muted); padding:18px; text-align:center; }
+    .highlight { background:linear-gradient(90deg, rgba(47,158,68,0.06), rgba(255,255,255,0)); font-weight:700; }
+    .small-btn { padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06); background:var(--card); cursor:pointer; }
+    .lb-tabs { display:flex; gap:8px; margin:10px 0 12px 0; }
+    .lb-tab { padding:8px 10px; cursor:pointer; border-radius:8px; background:var(--card); border:1px solid rgba(0,0,0,0.04); }
+    .lb-tab.active { background:linear-gradient(90deg,#2f9e44,#46b26b); color:#fff; border:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="img/world.png" alt="Eco-Monitor" class="brand-icon">
+      <h1>Eco‑Monitor</h1>
+    </div>
+    <nav class="nav">
+      <a class="button" href="index.html">Home</a>
+      <a class="button" href="leaderboard.html">Leaderboard</a>
+      <a class="button" href="map.html">Map</a>
+      <a class="button" href="login.html">Login</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="leaderboard-preview">
+      <div class="leaderboard-header">
+        <h3>Leaderboard — Top Players (Hong Kong)</h3>
+        <div class="leaderboard-actions">
+          <button id="refreshBtn" class="small-btn">Refresh</button>
+          <a class="cta" href="index.html">Back to Home</a>
+        </div>
+      </div>
+
+      <div class="lb-tabs" role="tablist" aria-label="Leaderboard tabs">
+        <div id="tab-players" class="lb-tab active" role="tab" aria-selected="true">Players</div>
+        <div id="tab-guilds" class="lb-tab" role="tab" aria-selected="false">Guilds</div>
+      </div>
+
+      <div id="players-section">
+        <table class="leaderboard-table" aria-describedby="leaderboard-desc">
+          <caption id="leaderboard-desc" style="display:none;">Top players by points</caption>
+          <thead><tr><th style="width:64px">#</th><th>Player</th><th style="width:120px">Points</th></tr></thead>
+          <tbody id="lb-body">
+            <!-- Dynamically populated. No temporary users are included by default. -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="guilds-section" style="display:none;">
+        <table class="leaderboard-table" aria-describedby="guildboard-desc">
+          <caption id="guildboard-desc" style="display:none;">Top guilds by total points</caption>
+          <thead><tr><th style="width:64px">#</th><th>Guild</th><th style="width:160px">Members</th><th style="width:120px">Total Points</th></tr></thead>
+          <tbody id="guild-body"></tbody>
+        </table>
+        <div id="guild-empty" class="empty" style="display:none;">
+          No guilds yet. Create one on the Home page and invite members.
+        </div>
+      </div>
+
+      <div id="lb-empty" class="empty" style="display:none;">
+        No players yet. Create an account on the Sign up page and start collecting points.
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-right">
+      <div class="attribution">
+        Icon made by Freepik from Flaticon.com
+      </div>
+      <div class="copyright">© 2026 Eco‑Monitor</div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const lbBody = document.getElementById('lb-body');
+      const emptyHint = document.getElementById('lb-empty');
+      const refreshBtn = document.getElementById('refreshBtn');
+
+      const tabPlayers = document.getElementById('tab-players');
+      const tabGuilds = document.getElementById('tab-guilds');
+      const playersSection = document.getElementById('players-section');
+      const guildsSection = document.getElementById('guilds-section');
+
+      function loadUsers() {
+        try { return JSON.parse(localStorage.getItem('eco_users') || '{}'); }
+        catch (e) { return {}; }
+      }
+
+      function loadGuilds() {
+        try { return JSON.parse(localStorage.getItem('eco_guilds') || '{}'); }
+        catch (e) { return {}; }
+      }
+
+      // sample / temporary players from index.html
+      const samplePlayers = [
+        { email: 'green@example.com', name: 'GreenNinja', points: 9820 },
+        { email: 'rex@example.com', name: 'RecycleRex', points: 8340 },
+        { email: 'leafy@example.com', name: 'Leafy', points: 7910 },
+        { email: 'ecosam@example.com', name: 'EcoSam', points: 6500 },
+        { email: 'trash@example.com', name: 'TrashTalker', points: 5230 }
+      ];
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      function renderPlayers(limit = 50) {
+        const usersObj = loadUsers() || {};
+        const entries = Object.entries(usersObj).map(([email, u]) => ({
+          email,
+          name: u.name || email,
+          points: Number(u.points || 0)
+        }));
+
+        const lowerNames = new Set(entries.map(e => e.name.toLowerCase()));
+        const emailsSet = new Set(entries.map(e => e.email));
+        samplePlayers.forEach(sp => {
+          if (!emailsSet.has(sp.email) && !lowerNames.has(sp.name.toLowerCase())) {
+            entries.push({ email: sp.email, name: sp.name, points: Number(sp.points || 0) });
+          }
+        });
+
+        if (!entries.length) {
+          lbBody.innerHTML = '';
+          emptyHint.style.display = 'block';
+          return;
+        }
+
+        emptyHint.style.display = 'none';
+        entries.sort((a,b) => b.points - a.points || a.name.localeCompare(b.name));
+        const current = localStorage.getItem('eco_current_user') || sessionStorage.getItem('eco_current_user');
+
+        const rows = entries.slice(0, limit).map((u, i) => {
+          const isCurrent = current && current === u.email;
+          const trClass = isCurrent ? 'highlight' : '';
+          return `<tr class="${trClass}"><td>${i+1}</td><td>${escapeHtml(u.name)}</td><td>${u.points.toLocaleString()}</td></tr>`;
+        });
+
+        lbBody.innerHTML = rows.join('');
+      }
+
+      function renderGuilds(limit = 50) {
+        const usersObj = loadUsers() || {};
+        const guilds = {}; // guildId -> { name, members:Set, points }
+        // start with persisted guild meta
+        const persistedGuilds = loadGuilds();
+        Object.keys(persistedGuilds).forEach(gid => {
+          guilds[gid] = { name: persistedGuilds[gid].name || gid, members: new Set(persistedGuilds[gid].members || []), points: 0 };
+        });
+
+        // accumulate points from users
+        Object.entries(usersObj).forEach(([email, u]) => {
+          const g = u.guild;
+          const pts = Number(u.points || 0);
+          if (g) {
+            if (!guilds[g]) guilds[g] = { name: g, members: new Set(), points: 0 };
+            guilds[g].members.add(email);
+            guilds[g].points += pts;
+          }
+        });
+
+        // convert to array and sort
+        const list = Object.entries(guilds).map(([gid, g]) => ({
+          id: gid,
+          name: g.name,
+          members: Array.from(g.members),
+          points: g.points
+        })).filter(g => g.members.length > 0);
+
+        const guildBody = document.getElementById('guild-body');
+        const guildEmpty = document.getElementById('guild-empty');
+
+        if (!list.length) {
+          guildBody.innerHTML = '';
+          guildEmpty.style.display = 'block';
+          return;
+        }
+
+        guildEmpty.style.display = 'none';
+
+        list.sort((a,b) => b.points - a.points || a.name.localeCompare(b.name));
+        const rows = list.slice(0, limit).map((g, i) => {
+          return `<tr><td>${i+1}</td><td>${escapeHtml(g.name)}</td><td>${g.members.length}</td><td>${g.points.toLocaleString()}</td></tr>`;
+        });
+
+        guildBody.innerHTML = rows.join('');
+      }
+
+      // tab switching
+      function showPlayers() {
+        tabPlayers.classList.add('active');
+        tabGuilds.classList.remove('active');
+        playersSection.style.display = '';
+        guildsSection.style.display = 'none';
+        renderPlayers();
+      }
+      function showGuilds() {
+        tabPlayers.classList.remove('active');
+        tabGuilds.classList.add('active');
+        playersSection.style.display = 'none';
+        guildsSection.style.display = '';
+        renderGuilds();
+      }
+
+      tabPlayers.addEventListener('click', showPlayers);
+      tabGuilds.addEventListener('click', showGuilds);
+
+      refreshBtn.addEventListener('click', () => {
+        if (tabGuilds.classList.contains('active')) renderGuilds(); else renderPlayers();
+      });
+
+      // initial render (players by default)
+      renderPlayers();
+    })();
+  </script>
+</body>
+</html>

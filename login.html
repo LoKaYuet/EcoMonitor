@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eco‑Monitor — Sign in / Sign up</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(180deg,#0f1724 0%, #202125 100%); color: #ffffff; }
+    header { background:transparent; }
+    .auth-wrap { max-width:920px; margin:36px auto; display:grid; grid-template-columns: 1fr 420px; gap:28px; padding:0 18px; }
+    .auth-intro { background:linear-gradient(180deg, rgba(219, 13, 13, 0.02), rgba(255,255,255,0.01)); padding:26px; border-radius:12px; }
+    .auth-intro h2 { margin-top:0; color:#dff7e1 }
+    .card { background:rgba(255,255,255,0.03); padding:18px; border-radius:12px; }
+    .tabs { display:flex; gap:8px; margin-bottom:12px; }
+    .tab { flex:1; text-align:center; padding:10px 12px; border-radius:10px; cursor:pointer; background:transparent; color:#cbead1; border:1px solid rgba(255,255,255,0.04); }
+    .tab.active { background:linear-gradient(90deg,#2f9e44,#46b26b); color:white; border:none; }
+    form { display:flex; flex-direction:column; gap:10px; }
+    label { font-size:13px; color:#cfe7d4; }
+    input { padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.25); color:#e6eef0; outline:none; }
+    .button { display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; text-align:center; cursor:pointer; background:linear-gradient(90deg,#2f9e44,#46b26b); color:white; border:none; }
+    .msg { font-size:13px; padding:8px 10px; border-radius:8px; margin-top:6px; }
+    .msg.error { background:rgba(255,80,80,0.12); color:#ffb3b3; }
+    .msg.success { background:rgba(72,187,120,0.12); color:#bff0c8; }
+    @media (max-width:900px){ .auth-wrap { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="img/world.png" alt="Eco-Monitor" class="brand-icon" style="width:36px;height:36px;">
+      <h1 style="margin:0;font-size:16px;color:#dff7e1">Eco‑Monitor</h1>
+    </div>
+    <nav class="nav">
+      <a class="button" style ="color: #ffffff;" href="index.html">Home</a>
+      <a class="button" style ="color: #ffffff;" href="leaderboard.html">Leaderboard</a>
+      <a class="button" style ="color: #ffffff;" href="map.html">Map</a>
+      <a class="button" style ="color: #ffffff;" href="login.html">Login</a>
+    </nav>
+  </header>
+
+  <main class="auth-wrap">
+    <section class="auth-intro card">
+      <h2>Welcome to Eco‑Monitor</h2>
+      <p class="muted">Collect points by visiting recycling stations, completing eco‑challenges and climb the Hong Kong leaderboard. Sign in to save progress and redeem rewards.</p>
+
+      <ul style="margin-top:12px; padding-left:18px; color:#cfe7d4;">
+        <li> Earn points for recycling & completing tasks</li>
+        <li> Track progress and achievements</li>
+        <li> Compete on the local leaderboard</li>
+      </ul>
+
+      </div>
+    </section>
+
+    <aside class="card" aria-labelledby="auth-heading">
+      <div class="tabs" role="tablist">
+        <div id="tab-login" class="tab active" role="tab" aria-selected="true">Sign in</div>
+        <div id="tab-signup" class="tab" role="tab" aria-selected="false">Create account</div>
+      </div>
+
+      <div id="panel-login" role="tabpanel">
+        <form id="loginForm" autocomplete="on">
+          <label for="login-email">Email or Username</label>
+          <input id="login-email" name="email" type="text" placeholder="you@example.com or username" required>
+
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" placeholder="••••••••" required>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <label class="small"><input id="remember" type="checkbox"> Remember me</label>
+            <a href="#" id="forgot" class="small">Forgot password?</a>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button class="button" type="submit">Sign in</button>
+            <div id="login-msg" class="msg" style="display:none"></div>
+          </div>
+        </form>
+      </div>
+
+      <div id="panel-signup" role="tabpanel" style="display:none;">
+        <form id="signupForm" autocomplete="on">
+          <label for="signup-name">Display name</label>
+          <input id="signup-name" name="name" type="text" placeholder="e.g. GreenNinja" required>
+
+          <label for="signup-email">Email</label>
+          <input id="signup-email" name="email" type="email" placeholder="you@example.com" required>
+
+          <label for="signup-password">Password</label>
+          <input id="signup-password" name="password" type="password" placeholder="At least 8 characters" required>
+
+          <label for="signup-password-confirm">Confirm password</label>
+          <input id="signup-password-confirm" name="password_confirm" type="password" placeholder="Repeat password" required>
+
+          <div style="margin-top:12px;">
+            <button class="button" type="submit">Create account</button>
+            <div id="signup-msg" class="msg" style="display:none"></div>
+          </div>
+        </form>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Lightweight client-side auth using localStorage (mock). Replace with real backend for production.
+    (function () {
+      const $ = id => document.getElementById(id);
+      const tabLogin = $('tab-login'), tabSignup = $('tab-signup');
+      const panelLogin = $('panel-login'), panelSignup = $('panel-signup');
+
+      function switchTab(toSignup) {
+        tabLogin.classList.toggle('active', !toSignup);
+        tabSignup.classList.toggle('active', toSignup);
+        panelLogin.style.display = toSignup ? 'none' : 'block';
+        panelSignup.style.display = toSignup ? 'block' : 'none';
+      }
+
+      tabLogin.addEventListener('click', () => switchTab(false));
+      tabSignup.addEventListener('click', () => switchTab(true));
+
+      // Helpers: SHA-256 hash to store passwords (browser SubtleCrypto)
+      async function hashPassword(password) {
+        const enc = new TextEncoder();
+        const data = enc.encode(password);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+      }
+
+      function loadUsers() {
+        try {
+          return JSON.parse(localStorage.getItem('eco_users') || '{}');
+        } catch (e) { return {}; }
+      }
+      function saveUsers(users) {
+        localStorage.setItem('eco_users', JSON.stringify(users));
+      }
+
+      // Signup
+      $('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = $('signup-name').value.trim();
+        const email = $('signup-email').value.trim().toLowerCase();
+        const pw = $('signup-password').value;
+        const pwc = $('signup-password-confirm').value;
+        const msg = $('signup-msg');
+
+        msg.style.display = 'block';
+        msg.className = 'msg';
+
+        if (!name || !email || !pw) {
+          msg.textContent = 'Please fill all fields.';
+          msg.classList.add('error');
+          return;
+        }
+        if (pw.length < 8) {
+          msg.textContent = 'Password must be at least 8 characters.';
+          msg.classList.add('error');
+          return;
+        }
+        if (pw !== pwc) {
+          msg.textContent = 'Passwords do not match.';
+          msg.classList.add('error');
+          return;
+        }
+
+        const users = loadUsers();
+        if (users[email] || Object.values(users).some(u => u.name && u.name.toLowerCase() === name.toLowerCase())) {
+          msg.textContent = 'An account with that email or display name already exists.';
+          msg.classList.add('error');
+          return;
+        }
+
+        const h = await hashPassword(pw);
+        users[email] = { name, hash: h, points: 0, createdAt: Date.now() };
+        saveUsers(users);
+
+        msg.textContent = 'Account created. Redirecting to sign in...';
+        msg.classList.add('success');
+        setTimeout(() => { switchTab(false); $('login-email').value = email; $('login-password').focus(); msg.style.display='none'; }, 900);
+      });
+
+      // Login
+      $('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const idInput = $('login-email').value.trim();
+        const pw = $('login-password').value;
+        const remember = $('remember').checked;
+        const msg = $('login-msg');
+        msg.style.display = 'block';
+        msg.className = 'msg';
+
+        if (!idInput || !pw) {
+          msg.textContent = 'Please enter credentials.';
+          msg.classList.add('error');
+          return;
+        }
+
+        const users = loadUsers();
+        // allow login by email or display name
+        let emailKey = idInput.toLowerCase();
+        if (!users[emailKey]) {
+          // try find by name
+          const match = Object.entries(users).find(([email,u]) => u.name && u.name.toLowerCase() === idInput.toLowerCase());
+          if (match) emailKey = match[0];
+        }
+
+        if (!users[emailKey]) {
+          msg.textContent = 'No account found.';
+          msg.classList.add('error');
+          return;
+        }
+
+        const h = await hashPassword(pw);
+        if (h !== users[emailKey].hash) {
+          msg.textContent = 'Incorrect password.';
+          msg.classList.add('error');
+          return;
+        }
+
+        // success
+        msg.textContent = 'Signed in. Redirecting...';
+        msg.classList.add('success');
+        try {
+          if (remember) localStorage.setItem('eco_current_user', emailKey);
+          sessionStorage.setItem('eco_current_user', emailKey);
+        } catch (e) { /* ignore */ }
+
+        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      });
+
+      // optional: prefill login if remembered
+      const remembered = localStorage.getItem('eco_current_user') || sessionStorage.getItem('eco_current_user');
+      if (remembered) {
+        $('login-email').value = remembered;
+      }
+
+      // simple forgot handler (mock)
+      $('forgot').addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Password reset is not implemented in this demo. Please create a new account if you lost access.');
+      });
+    })();
+  </script>
+</body>
+</html>

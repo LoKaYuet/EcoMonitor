@@ -1,14 +1,386 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eco‑Monitor — Home</title>
-    <link rel="stylesheet" href="css/index.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eco‑Monitor — Home</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div>temp testing</div>
-    <div><a href="map.html">link</a></div>
+  <header>
+    <div class="brand">
+      <img src="img/world.png" alt="Eco-Monitor" class="brand-icon">
+      <h1>Eco‑Monitor</h1>
+    </div>
+    <nav class="nav">
+      <a class="button" href="index.html">Home</a>
+      <a class="button" href="leaderboard.html">Leaderboard</a>
+      <a class="button" href="map.html">Map</a>
+      <a class="button" href="login.html">Login</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <h2>Save Hong Kong. Recycle. Earn rewards.</h2>
+        <p>Join Eco‑Monitor: visit recycling points across Hong Kong, complete eco‑activities and compete on the leaderboard to earn real rewards.</p>
+        <div class="cta-row">
+          <a class="cta primary" href="map.html">Start Exploring</a>
+          <a class="cta" href="leaderboard.html">See Leaderboard</a>
+          <a class="cta" href="exchange.html">Exchange Points</a>
+        </div>
+        <ul class="features">
+          <li><img src="img/atmosphere.png" alt="Recycle"> Earn points for recycling</li>
+          <li><img src="img/planet.png" alt="Eco"> Work Together</li>
+          <li><img src="img/podium.png" alt="Rewards"> Climb the leaderboard</li>
+        </ul>
+      </div>
+      <div class="hero-right">
+        <div class="map-preview">
+          <img src="img/map-preview.png" alt="Map preview">
+        </div>
+
+        <!-- updated score card: uses ids so JS can populate from stored accounts -->
+        <div class="score-card" id="score-card">
+          <div class="muted">Signed in as</div>
+          <div id="score-top" style="font-weight:700;">Your Score</div>
+          <div id="score-value" style="font-size:20px;margin-top:6px;">0</div>
+          <div style="margin-top:8px;">
+            <a id="auth-link" class="cta" href="login.html">Sign in to save progress</a>
+            <button id="signout-btn" class="cta" style="display:none;margin-left:8px;">Sign out</button>
+          </div>
+        </div>
+
+        <!-- Guild creation / join panel -->
+        <div class="card" style="margin-top:12px; padding:12px;">
+          <h3 style="margin:0 0 8px 0;">Guilds</h3>
+          <p class="muted" style="margin:0 0 8px 0;">Create a guild and invite others. Guild points are the sum of member points.</p>
+          <form id="guild-form" autocomplete="off" style="display:flex;gap:8px;flex-direction:column;">
+            <label for="guild-name" class="small">Guild name</label>
+            <input id="guild-name" type="text" placeholder="e.g. GreenSquad" required>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="cta primary" id="create-guild" type="submit">Create & Join</button>
+              <button class="cta" type="button" id="invite-btn" style="display:none;">Invite players</button>
+              <button class="cta" type="button" id="leave-guild" style="display:none;margin-left:auto;">Leave Guild</button>
+            </div>
+            <div id="guild-msg" class="muted small" style="margin-top:6px;"></div>
+          </form>
+        </div>
+        <!-- Invite modal (simple) -->
+        <div id="invite-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:40;">
+          <div style="background:var(--card); padding:16px; border-radius:10px; width:420px; max-width:92%; box-shadow:0 6px 24px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong>Invite players to guild</strong>
+              <button id="invite-close" class="cta" style="padding:6px 8px;">Close</button>
+            </div>
+            <input id="invite-search" type="text" placeholder="Search by name or email" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);margin-bottom:8px;">
+            <div id="invite-results" style="max-height:260px; overflow:auto;"></div>
+            <div id="invite-note" class="muted small" style="margin-top:8px;">You can only invite existing accounts or sample players will be added as mock accounts.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="leaderboard-preview">
+      <h3>Leaderboard — Top Players (Hong Kong)</h3>
+      <table class="leaderboard-table">
+        <thead><tr><th>#</th><th>Player</th><th>Points</th></tr></thead>
+        <tbody id="preview-body">
+          <!-- populated by script: merges persisted users with sample players -->
+        </tbody>
+      </table>
+      <div class="leaderboard-actions">
+        <a href="leaderboard.html" class="cta">Full Leaderboard</a>
+      </div>
+    </section>
+
+    <section class="about">
+      <h3>About Eco‑Monitor</h3>
+      <p>In today's modern digital age, there are many ways to reduce the pollution around us. Today's technology has evolved immensely far from the early days of the Internet that many countries have already become green, such as Singapore and Japan.  However, the problem of being environmentally friendly is still prevalent in Hong Kong. <br><br>
+      Due to the public's environmental awareness being low, especially among the younger generation, the ecological footprint in Hong Kong has dropped to the 3rd worst in the Asia- Pacific region. <br><br> Our role to alleviate this ever-growing problem is by giving a concise way for users to combat waste reduction and air pollution in Hong Kong in the form of a game with a reward system. <br><br> Eco‑Monitor is a location‑based game focused on sustainability. Players travel to recycling points, scan codes or check in, complete challenges, and earn points that show up on the leaderboard. The webapp encourages real‑world positive environmental action across Hong Kong.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-right">
+      <div class="attribution">
+        Icon made by Freepik from Flaticon.com
+      </div>
+      <div class="copyright">© 2026 Eco‑Monitor</div>
+    </div>
+  </footer>
+
+  <script>
+    // Populate homepage with currently signed-in user (uses same localStorage/session keys as login.html)
+    (function () {
+      function loadUsers() {
+        try { return JSON.parse(localStorage.getItem('eco_users') || '{}'); }
+        catch (e) { return {}; }
+      }
+      function saveUsers(u) {
+        try { localStorage.setItem('eco_users', JSON.stringify(u)); } catch (e) {}
+      }
+      function loadGuilds() {
+        try { return JSON.parse(localStorage.getItem('eco_guilds') || '{}'); }
+        catch (e) { return {}; }
+      }
+      function saveGuilds(g) {
+        try { localStorage.setItem('eco_guilds', JSON.stringify(g)); } catch (e) {}
+      }
+
+      // DOM refs used by both guilds and leaderboard preview
+      const scoreValueEl = document.getElementById('score-value');
+      const scoreTopEl = document.getElementById('score-top');
+      const authLinkEl = document.getElementById('auth-link');
+      const signoutBtn = document.getElementById('signout-btn');
+
+      const guildForm = document.getElementById('guild-form');
+      const guildNameInput = document.getElementById('guild-name');
+      const guildMsg = document.getElementById('guild-msg');
+      const leaveBtn = document.getElementById('leave-guild');
+      const createBtn = document.getElementById('create-guild');
+      const inviteBtn = document.getElementById('invite-btn');
+      const inviteModal = document.getElementById('invite-modal');
+      const inviteSearch = document.getElementById('invite-search');
+      const inviteResults = document.getElementById('invite-results');
+
+      const previewBody = document.getElementById('preview-body');
+
+      // sample / temporary players used on the homepage (kept in sync with leaderboard)
+      const samplePlayers = [
+        { email: 'green@example.com', name: 'GreenNinja', points: 9820 },
+        { email: 'rex@example.com', name: 'RecycleRex', points: 8340 },
+        { email: 'leafy@example.com', name: 'Leafy', points: 7910 },
+        { email: 'ecosam@example.com', name: 'EcoSam', points: 6500 },
+        { email: 'trash@example.com', name: 'TrashTalker', points: 5230 }
+      ];
+
+      const current = localStorage.getItem('eco_current_user') || sessionStorage.getItem('eco_current_user');
+
+      // render signed-in user card
+      function renderSignedIn() {
+        const users = loadUsers();
+        if (current && users[current]) {
+          const u = users[current];
+          scoreTopEl.textContent = u.name || current;
+          scoreValueEl.textContent = (Number(u.points || 0)).toLocaleString();
+          authLinkEl.textContent = 'View profile';
+          authLinkEl.href = 'login.html';
+          signoutBtn.style.display = 'inline';
+          if (u.guild) {
+            guildNameInput.value = (loadGuilds()[u.guild] || {}).name || u.guild;
+            leaveBtn.style.display = 'inline';
+            inviteBtn.style.display = 'inline';
+            if (createBtn) { createBtn.disabled = true; createBtn.title = 'Leave current guild to create a new one'; }
+          } else {
+            inviteBtn.style.display = 'none';
+            if (createBtn) { createBtn.disabled = false; createBtn.title = ''; }
+          }
+        } else {
+          scoreTopEl.textContent = 'Your Score';
+          scoreValueEl.textContent = '0';
+          authLinkEl.textContent = 'Sign in to save progress';
+          authLinkEl.href = 'login.html';
+          signoutBtn.style.display = 'none';
+        }
+      }
+
+      // merge persisted users with samplePlayers for preview (avoid duplicates by email/name)
+      function getMergedPlayers() {
+        const usersObj = loadUsers();
+        const entries = Object.entries(usersObj).map(([email,u]) => ({
+          email,
+          name: u.name || email,
+          points: Number(u.points || 0)
+        }));
+
+        const lowerNames = new Set(entries.map(e => e.name.toLowerCase()));
+        const emailsSet = new Set(entries.map(e => e.email));
+        samplePlayers.forEach(sp => {
+          if (!emailsSet.has(sp.email) && !lowerNames.has(sp.name.toLowerCase())) {
+            entries.push({ email: sp.email, name: sp.name, points: Number(sp.points || 0) });
+          }
+        });
+
+        entries.sort((a,b) => b.points - a.points || a.name.localeCompare(b.name));
+        return entries;
+      }
+
+      // populate preview table (top 5)
+      function renderPreviewLeaderboard(limit = 5) {
+        const entries = getMergedPlayers();
+        if (!previewBody) return;
+        if (!entries.length) {
+          previewBody.innerHTML = '<tr><td colspan="3" class="muted">No players yet.</td></tr>';
+          return;
+        }
+        const rows = entries.slice(0, limit).map((u,i) => {
+          const highlight = (current && current === u.email) ? 'style="font-weight:700;background:linear-gradient(90deg, rgba(47,158,68,0.03), rgba(255,255,255,0))"' : '';
+          return `<tr ${highlight}><td>${i+1}</td><td>${escapeHtml(u.name)}</td><td>${u.points.toLocaleString()}</td></tr>`;
+        });
+        previewBody.innerHTML = rows.join('');
+      }
+
+      // small helper (same as in other pages)
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      // guild form handling (create/join/leave) — works with login-generated users
+      guildForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        guildMsg.textContent = '';
+        if (!current) { guildMsg.textContent = 'Sign in to create a guild.'; return; }
+        const name = (guildNameInput.value || '').trim();
+        if (!name) { guildMsg.textContent = 'Please enter a guild name.'; return; }
+
+        const id = name.toLowerCase().replace(/[^a-z0-9\-]/g, '-').replace(/\-+/g, '-').replace(/^\-|\-$/g, '');
+        if (!id) { guildMsg.textContent = 'Invalid guild name.'; return; }
+
+        const guilds = loadGuilds();
+        const usersObj = loadUsers();
+        // Prevent creating a new guild if user already belongs to one
+        if (usersObj[current] && usersObj[current].guild && usersObj[current].guild !== id) {
+          guildMsg.textContent = 'You are already in a guild. Leave it to create a new one.';
+          return;
+        }
+
+        if (!guilds[id]) {
+          guilds[id] = { name: name, createdAt: Date.now(), members: [current] };
+          usersObj[current] = usersObj[current] || {};
+          usersObj[current].guild = id;
+          saveGuilds(guilds);
+          saveUsers(usersObj);
+          guildMsg.textContent = 'Created and joined guild "' + name + '".';
+        } else {
+          guilds[id].members = guilds[id].members || [];
+          if (!guilds[id].members.includes(current)) guilds[id].members.push(current);
+          usersObj[current] = usersObj[current] || {};
+          usersObj[current].guild = id;
+          saveGuilds(guilds);
+          saveUsers(usersObj);
+          guildMsg.textContent = 'Joined existing guild "' + guilds[id].name + '".';
+        }
+        leaveBtn.style.display = 'inline';
+        if (createBtn) { createBtn.disabled = true; createBtn.title = 'Leave current guild to create a new one'; }
+        inviteBtn.style.display = 'inline';
+        renderSignedIn();
+        renderPreviewLeaderboard();
+      });
+
+      leaveBtn.addEventListener('click', function () {
+        if (!current) return;
+        const usersObj = loadUsers();
+        const guilds = loadGuilds();
+        const u = usersObj[current];
+        if (!u || !u.guild) { guildMsg.textContent = 'You are not in a guild.'; return; }
+        const gid = u.guild;
+        if (guilds[gid]) {
+          guilds[gid].members = (guilds[gid].members || []).filter(m => m !== current);
+          if (!guilds[gid].members.length) delete guilds[gid];
+        }
+        delete u.guild;
+        usersObj[current] = u;
+        saveGuilds(guilds);
+        saveUsers(usersObj);
+        guildMsg.textContent = 'You left the guild.';
+        leaveBtn.style.display = 'none';
+        guildNameInput.value = '';
+        inviteBtn.style.display = 'none';
+        if (createBtn) { createBtn.disabled = false; createBtn.title = ''; }
+        renderSignedIn();
+      });
+
+      // Invite button handling
+      if (inviteBtn) {
+        inviteBtn.addEventListener('click', function () {
+          guildMsg.textContent = '';
+          const usersObj = loadUsers();
+          if (!current || !usersObj[current] || !usersObj[current].guild) {
+            guildMsg.textContent = 'Create or join a guild before inviting players.';
+            return;
+          }
+          inviteModal.style.display = 'flex';
+          inviteSearch.value = '';
+          populateInviteResults(''); // show all
+          inviteSearch.focus();
+        });
+      }
+
+      // close invite modal
+      document.getElementById('invite-close').addEventListener('click', () => { inviteModal.style.display = 'none'; });
+
+      function populateInviteResults(q) {
+        const ql = (q || '').trim().toLowerCase();
+        const merged = getMergedPlayers();
+        const usersObj = loadUsers();
+        const gid = (usersObj[current] || {}).guild;
+        const results = merged.filter(p => p.email !== current && (!gid || (usersObj[p.email] || {}).guild !== gid));
+        const filtered = ql ? results.filter(p => p.name.toLowerCase().includes(ql) || p.email.toLowerCase().includes(ql)) : results;
+        if (!filtered.length) {
+          inviteResults.innerHTML = '<div class="muted small">No matching players found.</div>';
+          return;
+        }
+        inviteResults.innerHTML = filtered.map(p => {
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)"><div><strong>${escapeHtml(p.name)}</strong><div class="muted small">${escapeHtml(p.email)}</div></div><div><button class="cta" data-email="${escapeHtml(p.email)}" data-name="${escapeHtml(p.name)}">Invite</button></div></div>`;
+        }).join('');
+        // hook invite buttons
+        Array.from(inviteResults.querySelectorAll('button[data-email]')).forEach(bt => {
+          bt.addEventListener('click', function () {
+            const email = this.dataset.email;
+            const name = this.dataset.name;
+            handleInvite(email, name);
+          });
+        });
+      }
+
+      inviteSearch.addEventListener('input', (e) => populateInviteResults(e.target.value));
+
+      function handleInvite(email, name) {
+        const usersObj = loadUsers();
+        const guilds = loadGuilds();
+        const u = usersObj[current];
+        if (!u || !u.guild) { guildMsg.textContent = 'You must be in a guild to invite players.'; return; }
+        const gid = u.guild;
+        guilds[gid] = guilds[gid] || { name: guildNameInput.value || gid, members: [], createdAt: Date.now() };
+        // check target existing guild
+        const target = usersObj[email];
+        if (target && target.guild && target.guild !== gid) {
+          guildMsg.textContent = `${name} is already in another guild.`;
+          return;
+        }
+        if (!guilds[gid].members.includes(email)) guilds[gid].members.push(email);
+        // create mock account for sample players if missing
+        if (!usersObj[email]) {
+          // preserve sample player's points when turning them into a persisted account
+          const sample = samplePlayers.find(sp => sp.email === email);
+          const pts = sample ? Number(sample.points || 0) : 0;
+          usersObj[email] = { name: name || email, points: pts, createdAt: Date.now(), guild: gid };
+        } else {
+          usersObj[email].guild = gid;
+        }
+        saveGuilds(guilds);
+        saveUsers(usersObj);
+        guildMsg.textContent = `Invited ${name} to "${guilds[gid].name}".`;
+        renderPreviewLeaderboard();
+        populateInviteResults(inviteSearch.value || '');
+      }
+
+      // sign out clears sessionStorage remembered key and reloads to update UI
+      signoutBtn.addEventListener('click', function () {
+        try { sessionStorage.removeItem('eco_current_user'); localStorage.removeItem('eco_current_user'); } catch (e) {}
+        window.location.href = 'login.html';
+      });
+
+      // initial render
+      renderSignedIn();
+      renderPreviewLeaderboard();
+
+      // expose partial API for debugging if needed
+      window._ecoDebug = { loadUsers, loadGuilds, getMergedPlayers };
+    })();
+  </script>
 </body>
 </html>

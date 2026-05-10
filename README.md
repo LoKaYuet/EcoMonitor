@@ -19,4 +19,9 @@ This project is for demonstration and competition purposes. All third-party asse
 
 **Category**: VTC Student Category  
 **Team Code**: `VTC028`  
-**Team Name**: `dse跛腳小組`
+**Team Name**: `dse跛腳小組`  
+**Members**:
+- (Leader) Lo Ka Yuet `@LoKaYuet`
+- Tsui Wai Hei `@DoctorEcto`
+- Tsui Hong Ki Brandon `@btsui-hub`
+- (Teacher) Yip Chi Laam Carol

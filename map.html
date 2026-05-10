@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPS Location Tracker</title>
+  <title>Eco-Monitor - Map</title>  
+  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <style>
+    /*map style*/
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: var(--font-sans), sans-serif; background: transparent; }
-    
+    body { background: transparent; background-color:#AFE1AF ;}
     .container { display: flex; flex-direction: column; height: 100%; }
-    .header { padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); }
-    .header h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
-    .header p { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+    .text-header { padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); }
+    .text-header h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+    .text-header p { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
     
     .controls { padding: 1rem 1.25rem; display: flex; gap: 12px; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); }
-    .controls button { padding: 8px 16px; font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: transparent; border-radius: var(--border-radius-md); transition: all 0.2s; }
-    .controls button:hover { background: var(--color-background-secondary); }
-    .controls button.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+    .controls button { padding: 8px 16px; font-size: 13px; cursor: pointer; border: 2px solid black; background: transparent; border-radius: var(--border-radius-md); transition: all 0.2s; }
     
     #map { flex: 1; width: 100%; min-height: 400px; }
     
@@ -30,21 +30,41 @@
     .status.error { background: var(--color-background-danger); color: var(--color-text-danger); }
     .status.recording { background: var(--color-background-success); color: var(--color-text-success); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1s infinite; }
+
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   </style>
-</head>
+  <script src="js/add-points.js"></script></head>
 <body>
-  <a href="index.html">back</a>
+  <header>
+    <div class="brand">
+      <img src="img/world.png" alt="Eco-Monitor" class="brand-icon">
+      <h1>Eco‑Monitor</h1>
+    </div>
+    <nav class="nav">
+      <a class="button" href="index.html">Home</a>
+      <a class="button" href="leaderboard.html">Leaderboard</a>
+      <a class="button" href="map.html">Map</a>
+      <a class="button" href="login.html">Login</a>
+    </nav>
+  </header>
+
   <div class="container">
-    <div class="header">
-      <h2>GPS Location Tracker</h2>
-      <p>Track your real-time location and movement history on an interactive map</p>
+    <div class="text-header">
+      <h1>Eco-Monitor</h1>
+      <div style="color:var(--muted)">Where will you act green today ?</div>
     </div>
     
+    <div id="user-info" style="text-align:right;">
+      <div class="muted small">Signed in as</div>
+      <div id="user-name" style="font-weight:700">Not signed in</div>
+      <div id="user-points" style="font-size:18px;margin-top:6px;">0 pts</div>
+    </div>
+    
+    <!-- Map -->
     <div class="controls">
       <button id="startBtn" class="active">Start Tracking</button>
       <button id="stopBtn">Stop Tracking</button>
-      <button id="clearBtn">Clear Trace</button>
+    
       <div style="flex: 1;"></div>
       <div class="status" id="status"><div class="dot"></div> Waiting for permission</div>
     </div>
@@ -64,13 +84,97 @@
         <div class="stat-label">Accuracy</div>
         <div class="stat-value" id="accuracy">—</div>
       </div>
+      <div>
+        <div id="msg-area"></div>
+        <button id="bonus-btn" class="mini-fab" title="Add 1,000 pts" style="position: inherit;">Complete Mission</button>
+        <!--temporary made invisable til fix-->
+        <div style="position:fixed; opacity: 0;">user nearest recycling point: <span id="distance">0 km</span></div>
+      </div>
     </div>
+    </div>
+    <!-- Daily missions -->
+    <table class="missions-table daily" aria-label="Daily missions">
+      <thead>
+        <tr>
+          <th colspan="3">Daily Missions <div id="daily-timer" style="font-weight:600">24:00:00</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="mission-item">
+              <div class="mission-text">Travel 1km without public transportation</div>
+              <img src="img/check.png" class="status-icon" alt="completed">
+            </div>
+          </td>
+          <td>
+            <div class="mission-item">
+              <div class="mission-text">Recycle 3 times using Smart Recycling Systems</div>
+              <img src="img/check.png" class="status-icon" alt="completed">
+            </div>
+          </td>
+          <td>
+            <div class="mission-item">
+              <div class="mission-text">Visit a Collaborated Store</div>
+              <img src="img/cross.png" class="status-icon" alt="not completed">
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Weekly missions -->
+    <table class="missions-table weekly" aria-label="Weekly missions">
+      <thead>
+        <tr>
+          <th colspan="3">Weekly Missions <div id="weekly-timer" style="font-weight:600">7d 00:00:00</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="mission-item">
+              <div class="mission-text">Travel 10 Km without Public Transport</div>
+              <img src="img/cross.png" class="status-icon" alt="not completed">
+            </div>
+          </td>
+          <td>
+            <div class="mission-item">
+              <div class="mission-text">Dominate 10 Turfs</div>
+              <img src="img/check.png" class="status-icon" alt="completed">
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script>
-    let map, marker, polyline, isTracking, userLocation = false, locationHistory = [];
+    let map, marker, userLocation, polyline, isTracking = false, locationHistory = [];
     let totalDistance = 0, lastLocation = null;
+    let greyAreas = [];
+    let bonusAreaBounds = [];
+
+    function getAreaBounds(lat, lng, dLat, dLng) {
+      return {
+        minLat: lat - dLat,
+        maxLat: lat + dLat,
+        minLng: lng - dLng,
+        maxLng: lng + dLng
+      };
+    }
+
+    function boundsOverlap(a, b) {
+      return a.minLat < b.maxLat && a.maxLat > b.minLat && a.minLng < b.maxLng && a.maxLng > b.minLng;
+    }
+
+    function RandomColor() {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 100;
+        const lightness = 50;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
 
     // Initialize map
     function initMap() {
@@ -83,53 +187,123 @@
       // Empty layer group for polyline
       polyline = L.polyline([], { color: '#378ADD', weight: 3, opacity: 0.8 }).addTo(map);
 
-      // temp test
-        const markerK = L.marker([22.263760, 114.238780]).addTo(map);
-            
-        // Function to check distance and show popup
-        function checkUserDistance() {
-          const userLatLng = userLocation.getLatLng();
-          const markerKLatLng = markerK.getLatLng();
-          
-          // Calculate distance in meters using Leaflet's distanceTo method
-          const distance = userLatLng.distanceTo(markerKLatLng);
-          
-          if (distance <= 500) {
-            // Show popup notification
-            L.popup()
-              .setContent('You are within 500m of location K!')
-              .openOn(map);
-            
-            return true;
-          } else {
-            return false;
-          }
+      //!!! default marker for testing
+      //var markerCW = L.marker([22.263760, 114.238780]).addTo(map);
+      //markerCW.bindPopup("<b>Hello!</b><br>I am a markerCW.");
+
+      hkarea.addTo(map);
+      map.fitBounds(hkarea.getBounds());
+    }
+  
+    //recycling near TSING YI
+    const recyclingLocations = [
+      {
+        name: "GREEN@TSING YI",
+        latlng: [22.3590756,114.1068039]
+      },
+      {
+        name: "GREEN@KWAI TSING",
+        latlng: [22.3612383,114.0966432]
+      },
+      {
+        name: "Waste Recycling Point",
+        latlng: [22.3428714,114.1101468]
+      }
+    ];
+
+    function addRecyclingMarkers() {          
+      const greenMarker = {
+          icon: L.divIcon({
+            className: 'custom-green-marker',
+            html: '<div style="background-color: green; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+            iconSize: [26, 26],
+            iconAnchor: [10, 1]
+          })
         }
-        
-        // Track user position using Geolocation API
-        if (navigator.geolocation) {
-          navigator.geolocation.watchPosition(
-            (position) => {
-              const lat = position.coords.latitude;
-              const lng = position.coords.longitude;
-              
-              // Check distance and show popup if within 500m
-              checkUserDistance();
-            },
-            (error) => {
-              console.error('Error getting location:', error);
-            },
-            {
-              enableHighAccuracy: true,
-              maximumAge: 10000,
-              timeout: 5000
-            }
-          );
-        } else {
-          console.error('Geolocation is not supported by this browser.');
-        }
+
+      recyclingLocations.forEach(loc => {
+        L.marker(loc.latlng, greenMarker)
+          .addTo(map)
+          .bindPopup(loc.name + '<br><br>Recycling Organisations and Collection Points');
+      });
     }
 
+    // bonus point areas functions
+    const hkarea = L.polygon([
+      [22.5, 114.4], //top right
+      [22.55, 114.2], //top middle
+      [22.5, 114], //top left
+      [22.40, 113.9], //bottom left
+      [22.19, 114.19], //bottom middle
+      [22.25, 114.40] //bottom right
+      ], {
+          color: 'green',
+          fillOpacity: 0,
+          weight: 1
+      })
+    const hkBounds = hkarea.getBounds();
+    const sw = hkBounds.getSouthWest();
+    const ne = hkBounds.getNorthEast();
+    const hkPolygon = hkarea.getLatLngs()[0].map(p => [p.lat, p.lng]);
+
+    function getRandomPointInHK() {
+      let lat, lng, inside;
+
+      do {
+        lat = sw.lat + Math.random() * (ne.lat - sw.lat);
+        lng = sw.lng + Math.random() * (ne.lng - sw.lng);
+        inside = false;
+        for (let i = 0, j = hkPolygon.length - 1; i < hkPolygon.length; j = i++) {
+          const [xi, yi] = hkPolygon[i];
+          const [xj, yj] = hkPolygon[j];
+          if ((yi > lng) !== (yj > lng) &&
+              lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi) {
+            inside = !inside;
+          }
+        }
+      } while (!inside);
+
+      return [lat, lng];
+    }
+
+    function addRandomBonusAreas(count = 20, statColor, popupText) {
+      const dLat = 0.01;
+      const dLng = 0.01;
+
+      for (let i = 0; i < count; i++) {
+        let center, lat, lng, bbox, attempts = 0;
+
+        do {
+          center = getRandomPointInHK();
+          [lat, lng] = center;
+          bbox = getAreaBounds(lat, lng, dLat, dLng);
+          attempts += 1;
+          if (attempts > 100) {
+            bbox = null;
+            break;
+          }
+        } while (bonusAreaBounds.some(existing => boundsOverlap(existing, bbox)));
+
+        if (!bbox) continue;
+
+        const area = L.polygon([
+          [lat - dLat, lng - dLng],
+          [lat - dLat, lng + dLng],
+          [lat + dLat, lng + dLng],
+          [lat + dLat, lng - dLng]
+        ], {
+          color: statColor,
+          fillOpacity: 0.3,
+          weight: 1
+        }).addTo(map);
+
+        area.bindPopup(popupText);
+        bonusAreaBounds.push(bbox);
+        if (statColor === 'grey') greyAreas.push(area);
+      }
+    }
+
+    // tracking functions
     function updateStatus(msg, type = 'info') {
       const el = document.getElementById('status');
       el.textContent = msg;
@@ -158,11 +332,12 @@
           const coords = [latitude, longitude];
 
           // Update marker
-          if (!userLocation) {
-            userLocation = L.circleMarker(coords, { radius: 8, color: '#185FA5', fill: true, fillColor: '#378ADD', fillOpacity: 0.9, weight: 2 }).addTo(map);
+          if (!marker) {
+            marker = L.circleMarker(coords, { radius: 8, color: '#185FA5', fill: true, fillColor: '#378ADD', fillOpacity: 0.9, weight: 2 }).addTo(map);
           } else {
-            userLocation.setLatLng(coords);
+            marker.setLatLng(coords);
           }
+          userLocation = marker;
 
           // Update trace line
           locationHistory.push(coords);
@@ -174,6 +349,7 @@
           document.getElementById('lng').textContent = longitude.toFixed(6);
           document.getElementById('accuracy').textContent = Math.round(accuracy) + ' m';
           document.getElementById('distance').textContent = totalDistance.toFixed(2) + ' km';
+          checkUserDistance();
         },
         error => {
           console.error(error);
@@ -183,8 +359,29 @@
         { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
       );
 
-      
       window.currentWatchId = watchId;
+    }
+
+    function checkUserDistance() {
+      if (!marker || !Array.isArray(recyclingLocations) || recyclingLocations.length === 0) return false;
+
+      const userLatLng = marker.getLatLng();
+      const nearbyLocation = recyclingLocations.find(loc => {
+        const locLatLng = L.latLng(loc.latlng);
+        return userLatLng.distanceTo(locLatLng) <= 100;
+      });
+
+      if (nearbyLocation) {
+        L.popup()
+          .setLatLng(userLatLng)
+          .setContent(`You are within 100m of ${nearbyLocation.name}!`)
+          .openOn(map);
+        console.log("user within distance");
+        return true;
+      }
+
+      console.log("user NOT within distance");
+      return false;
     }
 
     function stopTracking() {
@@ -205,14 +402,100 @@
       updateStatus('Trace cleared', 'info');
     }
 
+    function checkUserInGreyArea() {
+      if (!marker || greyAreas.length === 0) return false;
+      const userLatLng = marker.getLatLng();
+      const userPoint = [userLatLng.lat, userLatLng.lng];
+
+      function pointInPolygon([x, y], vs) {
+        let inside = false;
+        for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+          const xi = vs[i][0], yi = vs[i][1];
+          const xj = vs[j][0], yj = vs[j][1];
+          const intersect =
+            ((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      for (const area of greyAreas) {
+        const polygonLatLngs = area.getLatLngs()[0].map(p => [p.lat, p.lng]);
+        if (pointInPolygon(userPoint, polygonLatLngs)) return true;
+      }
+      return false;
+    }
+
     // Event listeners
     document.getElementById('startBtn').addEventListener('click', startTracking);
     document.getElementById('stopBtn').addEventListener('click', stopTracking);
-    document.getElementById('clearBtn').addEventListener('click', clearTrace);
 
+    // Mission script bellow
+    // Global daily & weekly countdowns (ticks down the same for all users — persists across refreshes)
+    (function startGlobalTimers() {
+      const dailyEl = document.getElementById('daily-timer');
+      const weeklyEl = document.getElementById('weekly-timer');
+      if (!dailyEl && !weeklyEl) return;
+
+      function msUntilNextUtcMidnight() {
+        const now = new Date();
+        const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
+        return next.getTime() - now.getTime();
+      }
+
+      function msUntilNextUtcMonday() {
+        const now = new Date();
+        const utcDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday ...
+        // days until next Monday (if today is Monday -> next Monday is 7 days away)
+        let daysUntil = (1 - utcDay + 7) % 7;
+        if (daysUntil === 0) daysUntil = 7;
+        const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntil, 0, 0, 0));
+        return next.getTime() - now.getTime();
+      }
+
+      function formatHMS(ms) {
+        if (ms <= 0) return '00:00:00';
+        const total = Math.floor(ms / 1000);
+        const hours = Math.floor(total / 3600);
+        const mins = Math.floor((total % 3600) / 60);
+        const secs = total % 60;
+        return String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      }
+
+      function formatDaysHMS(ms) {
+        if (ms <= 0) return '0d 00:00:00';
+        const total = Math.floor(ms / 1000);
+        const days = Math.floor(total / 86400);
+        const hours = Math.floor((total % 86400) / 3600);
+        const mins = Math.floor((total % 3600) / 60);
+        const secs = total % 60;
+        return `${days}d ${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }
+
+      function tick() {
+        if (dailyEl) {
+          dailyEl.textContent = formatHMS(msUntilNextUtcMidnight());
+        }
+        if (weeklyEl) {
+          weeklyEl.textContent = formatDaysHMS(msUntilNextUtcMonday());
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+    
     // Initialize
     initMap();
+    addRecyclingMarkers();
+    
     updateStatus('Ready. Click Start Tracking', 'info');
+    
+    addRandomBonusAreas(25, 'grey', 'Earn extra point by doing green activities here!')
+    for (let i = 0; i < 5; i++) {
+      addRandomBonusAreas(1, RandomColor(), 'A user had completed a green activity here!');
+    }
   </script>
 </body>
 </html>
