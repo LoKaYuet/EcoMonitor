@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
       { id: 'water-bottle', name: 'Water Bottle', cost: 1500, desc: 'Stainless steel reusable water bottle' },
       { id: 'tote-bag', name: 'Tote Bag', cost: 800, desc: 'Reusable fabric tote bag' },
       { id: 'voucher', name: 'HK$50 Voucher', cost: 3000, desc: 'Voucher for a collaborated shop' },
-      { id: 'seedkit', name: 'Seed Kit', cost: 600, desc: 'Grow your own plants' }
+      { id: 'seedkit', name: 'Seed Kit', cost: 600, desc: 'Grow your own plants' },
+      { id: 'guild-ticket', name: 'Guild Ticket', cost: 1000, desc: 'Allow user to create guild' }
     ];
     let areaBonus = false; //map.html
     function escapeHtml(s) {
@@ -108,10 +109,39 @@ document.addEventListener('DOMContentLoaded', function () {
       showMsg(`Redeemed ${item.name}. ${item.cost.toLocaleString()} pts deducted.`, 'success');
       renderUser();
       renderItems();
+      userInventory();
+    }
+    function userInventory() {
+      const pastRedemptionsEl = document.getElementById('past-redemptions');
+      if (!pastRedemptionsEl) return;
+      
+      const redemptions = loadRedemptions();
+      const currentUserRedemptions = redemptions.filter(r => r.user === current);
+      
+      if (currentUserRedemptions.length === 0) {
+        pastRedemptionsEl.innerHTML = '<p class="muted" style="margin-top:20px;">No past redemptions yet.</p>';
+        return;
+      }
+      
+      const html = `
+        <div style="margin-top:12px;">
+          ${currentUserRedemptions.map(r => `
+            <div style="padding:10px; border-radius:8px; background:var(--card); margin-bottom:8px; display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <strong>${escapeHtml(r.itemName)}</strong>
+                <div class="muted small">${new Date(r.at).toLocaleString()}</div>
+              </div>
+              <div style="text-align:right;font-weight:700;">${r.cost.toLocaleString()} pts</div>
+            </div>
+          `).join('')}
+        </div>`;
+      
+      pastRedemptionsEl.innerHTML = html;
     }
     // initial render
     renderUser();
     renderItems();
+    userInventory();
     // expose small API for debugging if needed
     window._exchangeDebug = { redeem, renderUser, renderItems, loadRedemptions, loadUsers };
     // hook the demo bonus button
@@ -130,20 +160,20 @@ document.addEventListener('DOMContentLoaded', function () {
         // add points
         users[current] = users[current] || {};
         if (areaBonus) {
-          users[current].points = Number(users[current].points || 0) + 1500;
+          users[current].points = Number(users[current].points || 0) + 150;
           saveUsers(users);
-          showMsg('Added 1,000 points + 500 Bonus points for being in a bonus area.', 'success');
+          showMsg('Added 100 points + 50 Bonus points for being in a bonus area.', 'success');
         } else {
-          users[current].points = Number(users[current].points || 0) + 1000;
+          users[current].points = Number(users[current].points || 0) + 100;
           saveUsers(users);
-          showMsg('Added 1,000 points to your account.', 'success');
+          showMsg('Added 100 points to your account.', 'success');
         }
         renderUser();
         renderItems();
-        // brief visual feedback: disable for 1s to avoid rapid clicks
+        // brief visual feedback: disable for 0.01s
         console.log("added 1000pts");
         bonusBtn.disabled = true;
-        setTimeout(() => { bonusBtn.disabled = false; }, 1000);
+        setTimeout(() => { bonusBtn.disabled = false; }, 10);
       });
     }
   } catch (err) {
