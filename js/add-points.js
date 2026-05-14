@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
       bonusBtn.addEventListener('click', function () {
         const users = loadUsers();
         if (!current || !users[current]) {
-          showMsg('Sign in to receive bonus points.', 'error');
+          showMsg('Sign in to receive points.', 'error');
           return;
         }
         // check areaBonus
@@ -174,6 +174,22 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("added 1000pts");
         bonusBtn.disabled = true;
         setTimeout(() => { bonusBtn.disabled = false; }, 10);
+      });
+    }
+    // hook the scanner button // no ai for this demo
+    const scanWindowOpen = document.getElementById('scan-btn');
+    if (scanWindowOpen) {
+      scanWindowOpen.addEventListener('click', function () {
+        const users = loadUsers();
+        if (!current || !users[current]) {
+          showMsg('Sign in to receive points.', 'error');
+          return;
+        }
+        // check areaBonus
+        if (typeof checkUserInGreyArea === "function") {
+          areaBonus = checkUserInGreyArea();
+        }
+        window.open("scanner.html?areaBonus=" + encodeURIComponent(areaBonus), "popupWindow", "width=400,height=400")
       });
     }
   } catch (err) {

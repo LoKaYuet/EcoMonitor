@@ -1,6 +1,6 @@
 # EcoMonitor
 
-**Public Alpha** — `ver 0.1.2`
+**Public Alpha** — `ver 0.1.3`
 
 This is the demo version, any data entered will only be stored on the client local storage.
 

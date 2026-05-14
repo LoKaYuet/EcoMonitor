@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eco‑Monitor — Scan QR code</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+  <script src="js/add-points.js"></script>
+  <script src="js/scanner.js"></script>
+</head>
+<body>
+  <header>Scanner window</header>
+  <div class="container">
+  <div id="video_window"></div>
+  <div id="loadQRCode">
+      <button id="scan-code-btn" class="button" type="submit">Scan QR Code</button><br><br>
+    <form id="loadCodeForm" autocomplete="on">
+      <label for="qr-code">Or input code manually:</label>
+      <input id="qr-code" name="qr-code" type="text" placeholder="Enter code here" required>
+      <button id="submit-code-btn" class="button" type="submit">Submit</button>
+    </form>
+    <div id="msg-area"></div>
+  </div>
+  </div>
+</body>
+</html>
